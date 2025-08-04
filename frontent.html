@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mental Health Chatbot</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body id="pageBody" class="relative bg-cover bg-no-repeat bg-center min-h-screen flex items-center justify-center text-black" style="background-image: url('./back1.png');">
+  <!-- Theme toggle -->
+  <div class="absolute top-4 right-4 z-50">
+    <button id="themeToggle" class="px-3 py-2 rounded-lg text-xl bg-gray-800 text-white">🌙</button>
+  </div>
+
+  <!-- Emotion bar -->
+  <!-- Emotion bar -->
+<div id="emotionBarContainer" class="absolute top-4 left-4 right-4 flex justify-center gap-10 z-10 mt-6">
+  <div class="flex flex-col items-center space-y-2">
+    <span class="text-2xl">😄</span>
+    <span id="joyLabel" class="text-sm font-semibold text-black">0%</span>
+  </div>
+  <div class="flex flex-col items-center space-y-2">
+    <span class="text-2xl">😢</span>
+    <span id="sadnessLabel" class="text-sm font-semibold text-black">0%</span>
+  </div>
+  <div class="flex flex-col items-center space-y-2">
+    <span class="text-2xl">😠</span>
+    <span id="angerLabel" class="text-sm font-semibold text-black">0%</span>
+  </div>
+  <div class="flex flex-col items-center space-y-2">
+    <span class="text-2xl">😨</span>
+    <span id="fearLabel" class="text-sm font-semibold text-black">0%</span>
+  </div>
+  <div class="flex flex-col items-center space-y-2">
+    <span class="text-2xl">😲</span>
+    <span id="surpriseLabel" class="text-sm font-semibold text-black">0%</span>
+  </div>
+  <div class="flex flex-col items-center space-y-2">
+    <span class="text-2xl">🤢</span>
+    <span id="disgustLabel" class="text-sm font-semibold text-black">0%</span>
+  </div>
+</div>
+
+
+  <!-- Chat Box -->
+  <div id="functional_box" class="bg-white/50 shadow-xl rounded-3xl p-8 w-full max-w-xl space-y-6 backdrop-blur">
+    <!-- Input toggle -->
+    <div class="flex justify-center space-x-6">
+      <button id="recordBtn" class="bg-blue-500 hover:bg-blue-600 text-white text-2xl px-8 py-4 rounded-xl">🎤 Record</button>
+      <button id="typeBtn" class="bg-green-500 hover:bg-green-600 text-white text-2xl px-8 py-4 rounded-xl">⌨️ Type</button>
+    </div>
+
+    <!-- Voice Input Section -->
+    <div id="recordSection" class="hidden space-y-4">
+      <button id="startRecording" class="bg-red-500 hover:bg-red-600 text-white w-full py-2 rounded-lg">Start Recording</button>
+      <div id="transcript" class="p-4 bg-gray-100 rounded-lg whitespace-pre-wrap break-words max-h-[300px] overflow-y-auto">"I’m here to listen whenever you’re ready."</div>
+    </div>
+
+    <!-- Text Input Section -->
+    <div id="typeSection" class="space-y-4">
+      <textarea id="typedInput" rows="5" class="w-full p-4 border rounded-lg border-gray-300 focus:border-blue-500" placeholder="Type your message here..."></textarea>
+      <pre id="transcript2" class="p-4 bg-gray-100 rounded-lg whitespace-pre-wrap break-words max-h-[300px] overflow-y-auto">"Hello! I’m here for you. Whenever you’re ready, just start typing."</pre>
+      <button id="saveTypedText" class="active:scale-95 text-white w-full py-2 bg-purple-500 hover:bg-purple-600 rounded-lg transition duration-200 ease-in-out shadow-md hover:shadow-lg">Send</button>
+    </div>
+  </div>
+
+  <!-- JS -->
+  <script>
+    const recordBtn = document.getElementById('recordBtn');
+    const typeBtn = document.getElementById('typeBtn');
+    const recordSection = document.getElementById('recordSection');
+    const startRecording = document.getElementById('startRecording');
+    const typeSection = document.getElementById('typeSection');
+    const transcript = document.getElementById('transcript');
+    const transcript2 = document.getElementById('transcript2');
+    const saveTypedText = document.getElementById('saveTypedText');
+    const themeToggle = document.getElementById('themeToggle');
+    const body = document.getElementById('pageBody');
+    const lightBg = "url('./back1.png')";
+    const darkBg = "url('./drkmd.png')";
+    const functional_box = document.getElementById('functional_box');
+    const typedInput = document.getElementById('typedInput');
+
+    // Toggle views
+    recordBtn.addEventListener('click', () => {
+      recordSection.classList.remove('hidden');
+      typeSection.classList.add('hidden');
+    });
+
+    typeBtn.addEventListener('click', () => {
+      typeSection.classList.remove('hidden');
+      recordSection.classList.add('hidden');
+    });
+
+    // Speech recognition
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'en-US';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    startRecording.addEventListener('click', () => {
+      startRecording.disabled = true;
+      startRecording.textContent = 'Listening...';
+      transcript.textContent = '';
+
+      recognition.start();
+
+      recognition.onresult = (event) => {
+        const result = event.results[0][0].transcript;
+        transcript.textContent = `🗣️ You: ${result}\n`;
+
+        fetch('http://127.0.0.1:5000/respond', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: result })
+        })
+        .then(res => res.json())
+        .then(data => {
+          transcript.textContent += `${data.reply}`;
+          if (data.audio) {
+            const audio = new Audio(`http://127.0.0.1:5000${data.audio}`);
+            audio.play().catch(err => console.error("🔊 Audio play error:", err));
+          }
+          updateEmotionLabels(data.emotions || {});
+        })
+        .catch(error => {
+          console.error('Backend error:', error);
+          transcript.textContent += '❌ Failed to get bot reply.';
+        });
+
+        startRecording.disabled = false;
+        startRecording.textContent = 'Start Recording';
+      };
+
+      recognition.onerror = (event) => {
+        transcript.textContent = `❌ Error: ${event.error}`;
+        startRecording.disabled = false;
+        startRecording.textContent = 'Start Recording';
+      };
+    });
+
+    // Text input send
+    saveTypedText.addEventListener('click', () => {
+      const input = typedInput.value.trim();
+      if (!input) {
+        transcript2.textContent = "You haven't typed anything!";
+        return;
+      }
+
+      transcript2.textContent = `📝 You: ${input}\n`;
+
+      fetch('http://127.0.0.1:5000/respond', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: input })
+      })
+      .then(res => res.json())
+      .then(data => {
+        transcript2.textContent += `${data.reply}`;
+        typedInput.value = '';
+        if (data.audio) {
+          const audio = new Audio(`http://127.0.0.1:5000${data.audio}`);
+          audio.play().catch(err => console.error("🔊 Audio play error:", err));
+        }
+        updateEmotionLabels(data.emotions || {});
+      })
+      .catch(error => {
+        console.error('Backend error:', error);
+        transcript2.textContent += '❌ Failed to get bot reply.';
+      });
+    });
+
+    // Emotion updater
+    function updateEmotionLabels(scores) {
+      const emotionMap = {
+        joy: 'joyLabel',
+        sadness: 'sadnessLabel',
+        anger: 'angerLabel',
+        fear: 'fearLabel',
+        surprise: 'surpriseLabel',
+        disgust: 'disgustLabel'
+      };
+      Object.entries(emotionMap).forEach(([key, labelId]) => {
+        const percent = Math.round((scores[key] || 0) * 100);
+        const label = document.getElementById(labelId);
+        if (label) label.textContent = `${percent}%`;
+      });
+    }
+
+    // Theme toggle
+    function applyTheme(theme) {
+      if (theme === "dark") {
+        body.classList.add("dark");
+        body.style.backgroundImage = darkBg;
+        themeToggle.textContent = "☀️";
+        typedInput.style.backgroundColor = "#1f2937";
+        typedInput.style.color = "white";
+        typedInput.style.borderColor = "#4b5563";
+        typedInput.style.caretColor = "white";
+        functional_box.style.backgroundColor = "rgba(0, 0, 0, 0.5)";
+        transcript.style.color = "#f3f4f6";
+        transcript.style.backgroundColor = "#1f2937";
+        transcript2.style.color = "#f3f4f6";
+        transcript2.style.backgroundColor = "#1f2937";
+        saveTypedText.classList.remove("bg-purple-500", "hover:bg-purple-600");
+        saveTypedText.classList.add("bg-purple-700", "hover:bg-purple-800", "text-white");
+
+        // 🌙 Make emotion text white
+        document.querySelectorAll('#emotionBarContainer span.text-sm').forEach(el => {
+          el.style.color = "white";
+        });
+
+      } else {
+        body.classList.remove("dark");
+        body.style.backgroundImage = lightBg;
+        themeToggle.textContent = "🌙";
+        typedInput.style.backgroundColor = "white";
+        typedInput.style.color = "black";
+        typedInput.style.borderColor = "#d1d5db";
+        typedInput.style.caretColor = "black";
+        functional_box.style.backgroundColor = "rgba(255, 255, 255, 0.5)";
+        transcript.style.color = "black";
+        transcript.style.backgroundColor = "#f3f4f6";
+        transcript2.style.color = "black";
+        transcript2.style.backgroundColor = "#f3f4f6";
+        saveTypedText.classList.remove("bg-purple-700", "hover:bg-purple-800");
+        saveTypedText.classList.add("bg-purple-500", "hover:bg-purple-600", "text-white");
+
+        // ☀️ Make emotion text black
+        document.querySelectorAll('#emotionBarContainer span.text-sm').forEach(el => {
+          el.style.color = "black";
+        });
+      }
+    }
+
+    themeToggle.addEventListener("click", () => {
+      const newTheme = body.classList.contains("dark") ? "light" : "dark";
+      localStorage.setItem("theme", newTheme);
+      applyTheme(newTheme);
+    });
+
+    window.addEventListener("DOMContentLoaded", () => {
+      const savedTheme = localStorage.getItem("theme") || "light";
+      applyTheme(savedTheme);
+    });
+  </script>
+</body>
+</html>
