@@ -12,31 +12,48 @@
     <button id="themeToggle" class="px-3 py-2 rounded-lg text-xl bg-gray-800 text-white">🌙</button>
   </div>
 
+  <button id="view-history"
+    class="fixed top-4 left-4 z-50 bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded-lg shadow-lg transition transform hover:scale-105">
+    📜 View Chat History
+  </button>
+  <div id="history-overlay" 
+      class="hidden fixed inset-0 bg-black/40 backdrop-blur-sm z-30">
+  </div>
+
+  <!-- History Container -->
+  <div id="history-container"
+      class="hidden fixed top-16 left-1/2 -translate-x-1/2 w-[750px] max-h-[600px] overflow-y-auto
+              bg-[#1e293b] text-gray-100 font-mono rounded-lg shadow-xl p-5 border border-gray-700 z-40">
+    <h3 class="text-xl font-bold mb-4">Recent Conversations</h3>
+    <ul id="history-list" class="space-y-3"></ul>
+  </div>
+
+
+
   <!-- Emotion bar -->
-  <!-- Emotion bar -->
-<div id="emotionBarContainer" class="absolute top-4 left-4 right-4 flex justify-center gap-10 z-10 mt-6">
+  <div id="emotionBarContainer" class="absolute top-4 left-4 right-4 flex justify-center gap-10 z-10 mt-6">
   <div class="flex flex-col items-center space-y-2">
-    <span class="text-2xl">😄</span>
+    <span class="text-2xl" title="Joy">😄</span>
     <span id="joyLabel" class="text-sm font-semibold text-black">0%</span>
   </div>
   <div class="flex flex-col items-center space-y-2">
-    <span class="text-2xl">😢</span>
+    <span class="text-2xl" title="Sadness">😢</span>
     <span id="sadnessLabel" class="text-sm font-semibold text-black">0%</span>
   </div>
   <div class="flex flex-col items-center space-y-2">
-    <span class="text-2xl">😠</span>
+    <span class="text-2xl" title="Anger">😠</span>
     <span id="angerLabel" class="text-sm font-semibold text-black">0%</span>
   </div>
   <div class="flex flex-col items-center space-y-2">
-    <span class="text-2xl">😨</span>
+    <span class="text-2xl" title="Fear">😨</span>
     <span id="fearLabel" class="text-sm font-semibold text-black">0%</span>
   </div>
   <div class="flex flex-col items-center space-y-2">
-    <span class="text-2xl">😲</span>
+    <span class="text-2xl" title="Surprise">😲</span>
     <span id="surpriseLabel" class="text-sm font-semibold text-black">0%</span>
   </div>
   <div class="flex flex-col items-center space-y-2">
-    <span class="text-2xl">🤢</span>
+    <span class="text-2xl" title="Disgust">🤢</span>
     <span id="disgustLabel" class="text-sm font-semibold text-black">0%</span>
   </div>
 </div>
@@ -53,14 +70,23 @@
     <!-- Voice Input Section -->
     <div id="recordSection" class="hidden space-y-4">
       <button id="startRecording" class="bg-red-500 hover:bg-red-600 text-white w-full py-2 rounded-lg">Start Recording</button>
-      <div id="transcript" class="p-4 bg-gray-100 rounded-lg whitespace-pre-wrap break-words max-h-[300px] overflow-y-auto">"I’m here to listen whenever you’re ready."</div>
+      <div id="transcript" class="p-4 bg-gray-100 rounded-lg whitespace-pre-wrap break-words max-h-[200px] overflow-y-auto">"I’m here to listen whenever you’re ready."</div>
     </div>
 
     <!-- Text Input Section -->
     <div id="typeSection" class="space-y-4">
       <textarea id="typedInput" rows="5" class="w-full p-4 border rounded-lg border-gray-300 focus:border-blue-500" placeholder="Type your message here..."></textarea>
-      <pre id="transcript2" class="p-4 bg-gray-100 rounded-lg whitespace-pre-wrap break-words max-h-[300px] overflow-y-auto">"Hello! I’m here for you. Whenever you’re ready, just start typing."</pre>
+      <pre id="transcript2" class="p-4 bg-gray-100 rounded-lg whitespace-pre-wrap break-words max-h-[200px] overflow-y-auto">"Hello! I’m here for you. Whenever you’re ready, just start typing..."</pre>
       <button id="saveTypedText" class="active:scale-95 text-white w-full py-2 bg-purple-500 hover:bg-purple-600 rounded-lg transition duration-200 ease-in-out shadow-md hover:shadow-lg">Send</button>
+    </div>
+
+    <!-- Thinking Indicator -->
+    <div id="thinkingIndicator" class="flex justify-center items-center space-x-2 text-lg font-semibold text-gray-700 hidden mt-2">
+      <svg class="animate-spin h-5 w-5 text-gray-500" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none" />
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 100 16v-4l-3 3 3 3v-4a8 8 0 01-8-8z" />
+      </svg>
+      <span>Thinking...</span>
     </div>
   </div>
 
@@ -76,10 +102,19 @@
     const saveTypedText = document.getElementById('saveTypedText');
     const themeToggle = document.getElementById('themeToggle');
     const body = document.getElementById('pageBody');
-    const lightBg = "url('./back1.png')";
-    const darkBg = "url('./drkmd.png')";
     const functional_box = document.getElementById('functional_box');
     const typedInput = document.getElementById('typedInput');
+    const thinkingIndicator = document.getElementById('thinkingIndicator');
+    const viewhistory=document.getElementById("view-history")
+
+    const lightBg = "url('./back1.png')";
+    const darkBg = "url('./drkmd.png')";
+    const viewHistoryBtn = document.getElementById("view-history");
+    const historyContainer = document.getElementById("history-container");
+    const history_overlay=document.getElementById("history-overlay")
+
+    
+
 
     // Toggle views
     recordBtn.addEventListener('click', () => {
@@ -92,6 +127,14 @@
       recordSection.classList.add('hidden');
     });
 
+    // Thinking Indicator
+    function showThinking() {
+      thinkingIndicator.classList.remove("hidden");
+    }
+    function hideThinking() {
+      thinkingIndicator.classList.add("hidden");
+    }
+
     // Speech recognition
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     const recognition = new SpeechRecognition();
@@ -103,12 +146,12 @@
       startRecording.disabled = true;
       startRecording.textContent = 'Listening...';
       transcript.textContent = '';
-
       recognition.start();
 
       recognition.onresult = (event) => {
         const result = event.results[0][0].transcript;
         transcript.textContent = `🗣️ You: ${result}\n`;
+        showThinking();
 
         fetch('http://127.0.0.1:5000/respond', {
           method: 'POST',
@@ -117,6 +160,7 @@
         })
         .then(res => res.json())
         .then(data => {
+          hideThinking();
           transcript.textContent += `${data.reply}`;
           if (data.audio) {
             const audio = new Audio(`http://127.0.0.1:5000${data.audio}`);
@@ -125,6 +169,7 @@
           updateEmotionLabels(data.emotions || {});
         })
         .catch(error => {
+          hideThinking();
           console.error('Backend error:', error);
           transcript.textContent += '❌ Failed to get bot reply.';
         });
@@ -147,8 +192,7 @@
         transcript2.textContent = "You haven't typed anything!";
         return;
       }
-
-      transcript2.textContent = `📝 You: ${input}\n`;
+      showThinking();
 
       fetch('http://127.0.0.1:5000/respond', {
         method: 'POST',
@@ -157,7 +201,8 @@
       })
       .then(res => res.json())
       .then(data => {
-        transcript2.textContent += `${data.reply}`;
+        hideThinking();
+        transcript2.textContent = `${data.reply}`;
         typedInput.value = '';
         if (data.audio) {
           const audio = new Audio(`http://127.0.0.1:5000${data.audio}`);
@@ -166,8 +211,9 @@
         updateEmotionLabels(data.emotions || {});
       })
       .catch(error => {
+        hideThinking();
         console.error('Backend error:', error);
-        transcript2.textContent += '❌ Failed to get bot reply.';
+        transcript2.textContent = '❌ Failed to get bot reply.';
       });
     });
 
@@ -205,12 +251,21 @@
         transcript2.style.backgroundColor = "#1f2937";
         saveTypedText.classList.remove("bg-purple-500", "hover:bg-purple-600");
         saveTypedText.classList.add("bg-purple-700", "hover:bg-purple-800", "text-white");
-
-        // 🌙 Make emotion text white
         document.querySelectorAll('#emotionBarContainer span.text-sm').forEach(el => {
           el.style.color = "white";
         });
-
+        historyContainer.style.backgroundColor = "#1f2937";
+        historyContainer.style.color = "white";
+        historyContainer.style.borderColor = "#4b5563";
+        let style = document.createElement("style");
+        style.id = "scrollbar-style";
+        style.innerHTML = `
+            #history-container::-webkit-scrollbar { width: 8px; }
+            #history-container::-webkit-scrollbar-track { background: #1f2937; }
+            #history-container::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 4px; }
+            #history-container::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+        `;
+        document.head.appendChild(style);
       } else {
         body.classList.remove("dark");
         body.style.backgroundImage = lightBg;
@@ -226,14 +281,66 @@
         transcript2.style.backgroundColor = "#f3f4f6";
         saveTypedText.classList.remove("bg-purple-700", "hover:bg-purple-800");
         saveTypedText.classList.add("bg-purple-500", "hover:bg-purple-600", "text-white");
-
-        // ☀️ Make emotion text black
         document.querySelectorAll('#emotionBarContainer span.text-sm').forEach(el => {
           el.style.color = "black";
         });
+        historyContainer.style.backgroundColor = "white";
+        historyContainer.style.color = "black";
+        historyContainer.style.borderColor = "#d1d5db";
+        let style = document.createElement("style");
+        style.id = "scrollbar-style";
+        style.innerHTML = `
+            #history-container::-webkit-scrollbar { width: 8px; }
+            #history-container::-webkit-scrollbar-track { background: #f3f4f6; }
+            #history-container::-webkit-scrollbar-thumb { background: #9ca3af; border-radius: 4px; }
+            #history-container::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+        `;
+        document.head.appendChild(style);
       }
     }
 
+
+    viewhistory.addEventListener("click", function () {
+    let historyContainer = document.getElementById("history-container");
+
+    // Toggle visibility
+    historyContainer.classList.toggle("hidden");
+
+    // Update button text
+    if (historyContainer.classList.contains("hidden")) {
+        viewhistory.innerText = "View Chat History";
+    } else {
+        viewhistory.innerText = "Close Chat History";
+
+        // Fetch history only when showing
+        fetch("http://127.0.0.1:5000/history")
+            .then(response => response.json())
+            .then(data => {
+                let historyList = document.getElementById("history-list");
+                historyList.innerHTML = ""; // clear previous
+
+                data.forEach(item => {
+                    let li = document.createElement("li");
+                    li.innerHTML = `
+                        <strong>You:</strong> ${item.user} <br>
+                        <em>Emotions:</em> Joy: ${item.emotions.joy}, Sadness: ${item.emotions.sadness}, 
+                        Anger: ${item.emotions.anger}, Fear: ${item.emotions.fear}, 
+                        Surprise: ${item.emotions.surprise}, Disgust: ${item.emotions.disgust} <br>
+                        <small>${item.timestamp}</small>
+                        <hr>
+                    `;
+                    historyList.appendChild(li);
+                });
+            })
+            .catch(error => {
+                console.error("Error fetching history:", error);
+                alert("Unable to fetch history.");
+            });
+    }
+});
+
+
+  
     themeToggle.addEventListener("click", () => {
       const newTheme = body.classList.contains("dark") ? "light" : "dark";
       localStorage.setItem("theme", newTheme);

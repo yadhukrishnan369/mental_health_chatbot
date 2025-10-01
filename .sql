@@ -7,6 +7,5 @@ CREATE TABLE mood_logs (
     fear FLOAT,
     surprise FLOAT,
     disgust FLOAT,
-    bot_reply TEXT,
-    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
